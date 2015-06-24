@@ -2,6 +2,7 @@ package com.tymevotec.iemhr;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -32,9 +33,29 @@ public class RegisterActivity extends Activity implements OnClickListener {
 		switch(v.getId()){
 		case R.id.RegisterButton:
 			
+			String username = etUserName.getText().toString();
+			String password = etPassword.getText().toString();
+			String email = etEmail.getText().toString();
+			String name = etFullName.getText().toString();
+			
+			User user = new User(username, password, email, name);
+			
+			registerUser(user);
+			
 			break;
 		}
 		
+	}
+
+	private void registerUser(User user) {
+		
+		ServerRequests serverRequests = new ServerRequests(this);
+		serverRequests.storeUserDataInBackground(user, new GetUserCallback() {
+			@Override
+			public void done(User retuenedUser) {
+				startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+			}
+		});
 	}
 
 }

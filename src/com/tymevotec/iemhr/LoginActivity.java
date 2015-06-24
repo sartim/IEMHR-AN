@@ -2,6 +2,7 @@ package com.tymevotec.iemhr;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -14,6 +15,7 @@ public class LoginActivity extends Activity implements OnClickListener {
 	Button btnLogin;
 	EditText etUsername, etPassword;
 	TextView tvRegister;
+	UserLocalStore userLocalStore;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +30,10 @@ public class LoginActivity extends Activity implements OnClickListener {
 		btnLogin = (Button) findViewById(R.id.LoginButton);
 		
 		tvRegister.setOnClickListener(this);
+		
 		btnLogin.setOnClickListener(this);
+		
+		userLocalStore = new UserLocalStore(this); 
 	}
 
 	@Override
@@ -36,6 +41,13 @@ public class LoginActivity extends Activity implements OnClickListener {
 		
 		switch(v.getId()) {
 		case R.id.LoginButton:
+			
+			String username = etUsername.getText().toString();
+			String password = etPassword.getText().toString();
+			
+			User user = new User(username, password);
+			
+			authenticate(user);
 			
 			break;
 			
@@ -45,7 +57,34 @@ public class LoginActivity extends Activity implements OnClickListener {
 			
 			break;
 		}
-		
 	}
+		private void authenticate(User user) {
+			ServerRequests serverRequests = new ServerRequests(this);
+			serverRequests.fetchUserDataInBackground(user, new GetUserCallback(){
+			
+				@Override
+				public void done(User returnedUser) {
+					if (returnedUser == null) {
+						showErrorMessage();
+					}else{
+						logUserIn(returnedUser);
+					}
+				}
+		});
+	}
+		
+		private void showErrorMessage() {
+			AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(LoginActivity.this);
+			dialogBuilder.setMessage("Incorrect user details");
+			dialogBuilder.setPositiveButton("OK", null);
+			dialogBuilder.show();
+		}
+		
+		private void logUserIn(User returnedUser) {
+			userLocalStore.storeUserData(returnedUser);
+			userLocalStore.setUserLoggedIn(true);
+			
+			startActivity(new Intent(this, MainActivity.class));
+		}
 
 }
